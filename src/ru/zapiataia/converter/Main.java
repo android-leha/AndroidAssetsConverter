@@ -1,17 +1,23 @@
 package ru.zapiataia.converter;
 
-import net.coobird.thumbnailator.ThumbnailParameter;
-import net.coobird.thumbnailator.Thumbnails;
-import net.coobird.thumbnailator.name.Rename;
-
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
 
     public static void main(String[] args) {
+
+        ScreenDensity.setBaseSize(16);
+
+        Map<String, ScreenDensity> screenDensityList = new HashMap<String, ScreenDensity>(4);
+
+        screenDensityList.put("drawable-mdpi", new ScreenDensity(2));
+        screenDensityList.put("drawable-hdpi", new ScreenDensity(3));
+        screenDensityList.put("drawable-xhdpi", new ScreenDensity(4));
+        screenDensityList.put("drawable-xxhdpi", new ScreenDensity(6));
+
         File dir = new File(".");
         File[] files = dir.listFiles(new FileFilter() {
             @Override
@@ -21,39 +27,21 @@ public class Main {
         });
 
         /**
-         * drawable-xxhdpi    96   216
-         * drawable-xhdpi     64   144
-         * drawable-hdpi      48    94
-         * drawable-mdpi      32    63
+         *
+         * Launcher icons base = 16
+         *
          */
 
+
         for (File file : files) {
-            resize(file, "drawable-xxhdpi", 96);
-            resize(file, "drawable-xhdpi", 64);
-            resize(file, "drawable-hdpi", 48);
-            resize(file, "drawable-mdpi", 32);
-        }
-
-    }
-
-    private static BufferedImage resize(File file, String dirName, int size) {
-        try {
-
-            File destinationDir = new File(dirName);
-            if (!destinationDir.exists()) {
-                destinationDir.mkdir();
+            for (String key : screenDensityList.keySet()) {
+                if (screenDensityList.get(key).resize(file, key)) {
+                    System.out.println("OK " + key + ": " + file.getName());
+                } else {
+                    System.out.println("Error " + key + ": " + file.getName());
+                }
             }
-            Thumbnails.of(file)
-                    .size(size, size)
-                    .toFiles(destinationDir, new Rename() {
-                        @Override
-                        public String apply(String name, ThumbnailParameter param) {
-                            return "ic_" + name;
-                        }
-                    });
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        return null;
+
     }
 }
